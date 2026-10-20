@@ -1,0 +1,41 @@
+openapi: 3.0.3
+info: { title: FH Pulse API, version: 1.0.0 }
+servers: [{ url: http://localhost:3000 }]
+components:
+  securitySchemes:
+    bearer: { type: http, scheme: bearer, bearerFormat: JWT }
+paths:
+  /api/setores: { get: { summary: Lista setores ativos, responses: { '200': { description: OK } } } }
+  /api/setores/{slug}/perguntas:
+    get:
+      summary: Perguntas ativas do setor
+      parameters: [{ name: slug, in: path, required: true, schema: { type: string } }]
+      responses: { '200': { description: OK } }
+  /api/avaliacoes:
+    post:
+      summary: Envia avaliação (e manifestação opcional)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [setorId, respostas]
+              properties:
+                setorId: { type: string, format: uuid }
+                respostas: { type: array, items: { type: object, properties: { pergunta_id: { type: string }, valor: { type: integer, minimum: 1, maximum: 5 }, texto: { type: string } } } }
+                origem: { type: string, enum: [qr_code, tablet, web] }
+                categoria: { type: string, enum: [elogio, sugestao, reclamacao, outro] }
+                texto: { type: string }
+      responses: { '201': { description: Criada }, '400': { description: Dados inválidos ou obrigatórias pendentes } }
+  /api/manifestacoes: { post: { summary: Registra manifestação, responses: { '201': { description: protocolo e código } } } }
+  /api/acompanhar: { post: { summary: Acompanha por protocolo + código (limite de tentativas), responses: { '200': { description: OK }, '404': { description: Inválido }, '429': { description: Muitas tentativas } } } }
+  /api/tv: { get: { summary: Dados agregados da TV Wall, responses: { '200': { description: OK } } } }
+  /api/login: { post: { summary: Login administrativo, responses: { '200': { description: token JWT }, '401': { description: Credenciais inválidas } } } }
+  /api/admin/indicadores: { get: { summary: Indicadores do dashboard, security: [{ bearer: [] }], responses: { '200': { description: OK }, '401': { description: Sem login } } } }
+  /api/admin/manifestacoes: { get: { summary: Lista com filtros e paginação, security: [{ bearer: [] }], responses: { '200': { description: OK } } } }
+  /api/admin/manifestacoes/{id}: { get: { summary: Detalhe e histórico, security: [{ bearer: [] }], responses: { '200': { description: OK } } } }
+  /api/admin/manifestacoes/{id}/movimentar: { post: { summary: Muda status / responde / nota interna, security: [{ bearer: [] }], responses: { '200': { description: OK }, '403': { description: Sem permissão } } } }
+  /api/admin/manifestacoes.csv: { get: { summary: Exporta CSV, security: [{ bearer: [] }], responses: { '200': { description: CSV } } } }
+  /api/admin/perguntas: { post: { summary: Cria pergunta, security: [{ bearer: [] }], responses: { '201': { description: Criada } } } }
+  /api/admin/perguntas/{id}: { patch: { summary: Edita ou desativa pergunta, security: [{ bearer: [] }], responses: { '200': { description: OK } } } }
+  /api/admin/usuarios: { post: { summary: Cria usuário (só Administrador), security: [{ bearer: [] }], responses: { '201': { description: Criado } } } }
